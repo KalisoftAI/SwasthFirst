@@ -51,9 +51,18 @@ MENU_DATA = [
 
 # Sample customers for testing
 SAMPLE_CUSTOMERS = [
-    {"name": "Priya Sharma", "phone": "9876543210", "health_goal": "Detox"},
-    {"name": "Rohit Mehta", "phone": "9123456789", "health_goal": "Energy"},
-    {"name": "Ananya Joshi", "phone": "9988776655", "health_goal": "Weight Loss"},
+    {"name": "Jagroop Kaur", "phone": "7387986785", "health_goal": "Detox"},
+    {"name": "Srinivas P", "phone": "9860403050", "health_goal": "Energy"},
+    {"name": "Bhavesh patil", "phone": "8208004685", "health_goal": "Weight Loss"},
+    {"name": "Goutam", "phone": "9764998239", "health_goal": "Energy"},
+    {"name": "Snehal Patil", "phone": "9922080986", "health_goal": "Weight Loss"},
+    {"name": "Ankita Jain", "phone": "9561328899", "health_goal": "Health"},
+    {"name": "Sandhya Pardeshi", "phone": "8550910949", "health_goal": "Fitness"},
+    {"name": "Sarika Ranjan", "phone": "7875000168", "health_goal": "Energy"},
+    {"name": "Amit Pardeshi", "phone": "7774098478", "health_goal": "Stamina"},
+    {"name": "Protika", "phone": "7798933354", "health_goal": "Health"},
+    {"name": "Satish", "phone": "9096029994", "health_goal": "Energy"},
+    {"name": "Pooja Agrawal", "phone": "9356541963", "health_goal": "Weight Loss"},
 ]
 
 

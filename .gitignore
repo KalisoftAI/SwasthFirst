@@ -1,0 +1,60 @@
+# Root .gitignore for SwasthFirst Project
+
+# IDEs
+.vscode/
+.idea/
+*.code-workspace
+.DS_Store
+
+# Environment files (sensitive)
+.env
+.env.local
+.env.production
+.env.production.local
+*.env.local
+
+# Node modules (frontend)
+node_modules/
+frontend-react/node_modules/
+
+# Build outputs
+dist/
+build/
+*.log
+
+# Temporary files
+*.tmp
+.cache/
+
+# OS specific
+Thumbs.db
+.byebug_history
+
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.Python
+venv/
+ENV/
+
+# Secret files
+*.key
+*.pem
+**/secrets*
+**/credentials*
+
+# Local configuration that shouldn't be shared
+local_config.json
+personal_notes.txt
+
+# GCP service account keys (if downloaded)
+*-gcloud-service-account.json
+```
+
+# Important: Never commit:
+# - .env.production (contains database passwords)
+# - Neon credentials
+# - GCP service account keys
+# - API secrets
+# - Private keys
