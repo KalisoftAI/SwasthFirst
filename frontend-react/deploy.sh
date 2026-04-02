@@ -18,6 +18,7 @@ REGION="us-central1"
 MEMORY="512Mi"
 CPU="1"
 TIMEOUT="300"
+CONTAINER_PORT="80"
 
 # Default values
 PROJECT_ID=""
@@ -47,6 +48,7 @@ usage() {
     echo ""
     echo "Optional:"
     echo "  --region REGION            GCP Region (default: us-central1)"
+    echo "  --container-port PORT      Container port to listen on (default: 80)"
     echo "  --memory MEMORY            Memory allocation (default: 512Mi)"
     echo "  --help                     Show this help message"
     exit 1
@@ -65,6 +67,10 @@ while [[ $# -gt 0 ]]; do
             ;;
         --region)
             REGION="$2"
+            shift 2
+            ;;
+        --container-port)
+            CONTAINER_PORT="$2"
             shift 2
             ;;
         --memory)
@@ -124,29 +130,16 @@ print_info "Step 2/5: Setting up GCP project..."
 gcloud config set project ${PROJECT_ID} 2>/dev/null
 print_status "GCP project set to: ${PROJECT_ID}"
 
-# Step 3: Build Docker image
-print_info "Step 3/5: Building Docker image (2-3 minutes)..."
+# Step 3 & 4: Build and Push Docker image using Cloud Build
+print_info "Step 3-4/5: Building and Pushing image via Cloud Build (2-3 minutes)..."
 print_info "Image: ${IMAGE_NAME}"
 
-docker build -t ${IMAGE_NAME}:latest . || {
-    print_error "Docker build failed"
+gcloud builds submit --tag ${IMAGE_NAME}:latest . || {
+    print_error "Cloud Build failed"
     exit 1
 }
 
-print_status "Docker image built successfully"
-
-# Step 4: Push to Google Container Registry
-print_info "Step 4/5: Pushing image to Google Container Registry (1-2 minutes)..."
-
-# Configure Docker auth if needed
-gcloud auth configure-docker gcr.io 2>/dev/null || true
-
-docker push ${IMAGE_NAME}:latest || {
-    print_error "Docker push failed"
-    exit 1
-}
-
-print_status "Image pushed to GCR"
+print_status "Image built and pushed successfully via Cloud Build"
 
 # Step 5: Deploy to Cloud Run
 print_info "Step 5/5: Deploying to Cloud Run (2-3 minutes)..."
@@ -158,9 +151,9 @@ gcloud run deploy ${SERVICE_NAME} \
     --memory ${MEMORY} \
     --cpu ${CPU} \
     --timeout ${TIMEOUT} \
+    --port ${CONTAINER_PORT} \
     --allow-unauthenticated \
-    --set-env-vars="REACT_APP_API_URL=${BACKEND_URL}/api/v1" \
-    --update-on-deploy || {
+    --set-env-vars="REACT_APP_API_URL=${BACKEND_URL}/api/v1" || {
     print_error "Cloud Run deployment failed"
     exit 1
 }

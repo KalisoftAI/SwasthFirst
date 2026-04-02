@@ -20,7 +20,7 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from database import engine, Base, AsyncSessionLocal, drop_all_tables
-from models import MenuItem, Admin, Customer, AdminRole
+from models import MenuItem, Admin, Customer, AdminRole, select
 from auth import hash_password
 
 # Menu data to seed
@@ -81,18 +81,21 @@ async def seed_database():
     
     # Check environment
     env = os.getenv("ENV", "development")
+    allow_destructive_seed = os.getenv("ALLOW_DESTRUCTIVE_SEED", "false").lower() == "true"
     
     if env == "production":
-        confirm = input("⚠️  You are in PRODUCTION mode. This will DROP ALL TABLES. Type 'YES' to confirm: ")
-        if confirm != "YES":
-            print("❌ Seed cancelled.")
-            return
-    
-    # Drop and recreate tables
-    print("🗑️  Dropping existing tables...")
-    await drop_all_tables()
+        if allow_destructive_seed:
+            print("🗑️  Dropping existing tables in PRODUCTION as ALLOW_DESTRUCTIVE_SEED is true...")
+            await drop_all_tables()
+        else:
+            print("⚠️  Skipping table drop in PRODUCTION. Set ALLOW_DESTRUCTIVE_SEED=true to override.")
+    else:
+        # In development, we can be more lenient and drop tables.
+        print("🗑️  Dropping existing tables in development mode...")
+        await drop_all_tables()
     
     print("🏗️  Creating tables...")
+    # This is safe to run multiple times. It only creates tables that don't exist.
     async with engine.begin() as conn:
         await conn.run_sync(Base.metadata.create_all)
     
@@ -101,38 +104,52 @@ async def seed_database():
         try:
             # Seed menu items
             print("🥤 Seeding menu items...")
-            for item_data in MENU_DATA:
-                menu_item = MenuItem(**item_data)
-                session.add(menu_item)
+            existing_items_q = await session.execute(select(MenuItem.name))
+            existing_items = set(existing_items_q.scalars().all())
+            new_items = [MenuItem(**item_data) for item_data in MENU_DATA if item_data["name"] not in existing_items]
             
-            await session.commit()
-            print(f"✅ Created {len(MENU_DATA)} menu items")
+            if new_items:
+                session.add_all(new_items)
+                await session.commit()
+                print(f"✅ Created {len(new_items)} new menu items")
+            else:
+                print("✅ Menu items are already up to date.")
             
             # Create superadmin
             print("👑 Creating superadmin account...")
-            admin = Admin(
-                username="swasthAdmin",
-                password_hash=hash_password("Admin@1234"),
-                role=AdminRole.SUPERADMIN
-            )
-            session.add(admin)
-            await session.commit()
-            print("✅ Superadmin created: username=swasthAdmin, password=Admin@1234")
+            superadmin = await session.get(Admin, "swasthAdmin")
+            if not superadmin:
+                admin = Admin(
+                    username="swasthAdmin",
+                    password_hash=hash_password("Admin@1234"),
+                    role=AdminRole.SUPERADMIN
+                )
+                session.add(admin)
+                await session.commit()
+                print("✅ Superadmin created: username=swasthAdmin, password=Admin@1234")
+            else:
+                print("✅ Superadmin 'swasthAdmin' already exists.")
             
             # Create sample customers
             print("👥 Creating sample customers...")
-            for customer_data in SAMPLE_CUSTOMERS:
-                customer = Customer(
-                    name=customer_data["name"],
-                    phone=customer_data["phone"],
-                    phone_hash=hash_password(customer_data["phone"]),  # Phone is the password
-                    health_goal=customer_data.get("health_goal"),
-                    is_active=True
-                )
-                session.add(customer)
-            
-            await session.commit()
-            print(f"✅ Created {len(SAMPLE_CUSTOMERS)} sample customers")
+            existing_customers_q = await session.execute(select(Customer.phone))
+            existing_customers = set(existing_customers_q.scalars().all())
+            new_customers = []
+            for cust_data in SAMPLE_CUSTOMERS:
+                if cust_data["phone"] not in existing_customers:
+                    new_customers.append(Customer(
+                        name=cust_data["name"],
+                        phone=cust_data["phone"],
+                        phone_hash=hash_password(cust_data["phone"]),
+                        health_goal=cust_data.get("health_goal"),
+                        is_active=True
+                    ))
+            if new_customers:
+                session.add_all(new_customers)
+                await session.commit()
+                print(f"✅ Created {len(new_customers)} new sample customers")
+            else:
+                print("✅ Sample customers are already up to date.")
             
             # Print summary
             print("\n" + "="*60)

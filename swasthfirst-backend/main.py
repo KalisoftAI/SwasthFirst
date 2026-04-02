@@ -29,6 +29,7 @@ from database import engine, init_db
 from middleware.rate_limiter import RateLimitMiddleware
 from routers import auth, menu, orders, admin
 from schemas import HealthResponse, ErrorResponse
+from seed_data import seed_database
 
 # Load environment variables
 load_dotenv()
@@ -257,6 +258,66 @@ async def health_check():
         timestamp=datetime.utcnow(),
         version="1.0.0"
     )
+
+
+@app.post(
+    "/init-db",
+    summary="Initialize Database",
+    description="Create database tables and seed initial data",
+    tags=["Root"]
+)
+async def initialize_database():
+    """
+    Initialize database tables and seed with data.
+    
+    This endpoint:
+    1. Creates all database tables
+    2. Seeds menu items (15 items)
+    3. Creates superadmin account
+    4. Creates sample customers (12 customers)
+    
+    ⚠️  Warning: Use only once during first setup. Safe to run multiple times.
+    
+    Returns:
+        Success message with data summary
+    """
+    try:
+        print("🌱 Starting database initialization...")
+        
+        # Initialize database tables
+        await init_db()
+        
+        # Seed database with data
+        await seed_database()
+        
+        return {
+            "status": "success",
+            "message": "Database initialized and seeded successfully!",
+            "summary": {
+                "tables_created": ["customers", "admins", "menu_items", "orders"],
+                "menu_items_seeded": 15,
+                "sample_customers": 12,
+                "superadmin": {
+                    "username": "swasthAdmin",
+                    "password": "Admin@1234 (CHANGE THIS IN PRODUCTION)"
+                }
+            },
+            "timestamp": datetime.utcnow().isoformat(),
+            "next_steps": [
+                "Test login with superadmin credentials",
+                "Verify menu items are available at /api/v1/menu",
+                "Try customer login with phone: 7387986785"
+            ]
+        }
+    except Exception as e:
+        print(f"❌ Database initialization failed: {e}")
+        return JSONResponse(
+            status_code=status.HTTP_500_INTERNAL_SERVER_ERROR,
+            content={
+                "status": "error",
+                "message": f"Database initialization failed: {str(e)}"
+            }
+        )
 
 
 # ============================================================================

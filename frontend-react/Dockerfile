@@ -1,42 +1,34 @@
-# Multi-stage Dockerfile for SwasthFirst React Frontend
-# Build stage: Compile React app
+# Dockerfile for SwasthFirst React Frontend
+# Optimized for GCP Cloud Run with a multi-stage build
+
+# ============================================
+# STAGE 1: Builder
+# ============================================
 FROM node:18-alpine AS builder
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and install all dependencies
 COPY package*.json ./
+RUN npm install
 
-# Install dependencies
-RUN npm ci --only=production && \
-    npm ci --only=development
-
-# Copy source code
+# Copy the rest of the application source code
 COPY . .
 
-# Build React app for production
+# Build the application for production
 RUN npm run build
 
-# Runtime stage: Serve build with Express
-FROM node:18-alpine
+# ============================================
+# STAGE 2: Runtime (Nginx)
+# ============================================
+FROM nginx:1.25-alpine
 
-WORKDIR /app
+# Copy the static build output from the builder stage
+COPY --from=builder /app/build /usr/share/nginx/html
 
-# Install serve or express (lightweight static server)
-RUN npm install -g serve
+# Copy the custom Nginx configuration to handle SPA routing
+COPY nginx.conf /etc/nginx/conf.d/default.conf
 
-# Copy built app from builder
-COPY --from=builder /app/build ./build
-
-# Set environment variable for port
-ENV PORT=3000
-
-# Health check
-HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
-  CMD node -e "require('http').get('http://localhost:3000', (r) => {if (r.statusCode !== 200) throw new Error(r.statusCode)})"
-
-# Expose port
-EXPOSE 3000
-
-# Start server
-CMD ["serve", "-s", "build", "-l", "3000"]
+# Expose port 80 and start nginx
+EXPOSE 80
+CMD ["nginx", "-g", "daemon off;"]

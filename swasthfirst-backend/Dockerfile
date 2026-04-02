@@ -50,11 +50,12 @@ ENV PORT=8000 \
 
 # Health check for Cloud Run
 HEALTHCHECK --interval=30s --timeout=5s --start-period=10s --retries=3 \
-    CMD curl -f http://localhost:${PORT}/health || exit 1
+    CMD curl -f http://localhost:${PORT:-8000}/health || exit 1
 
 # Expose port (Cloud Run listens on PORT env var)
-EXPOSE 8000
+EXPOSE ${PORT:-8000}
 
 # Run the application with uvicorn
+# Using shell form to read PORT environment variable (Cloud Run sets PORT=8080)
 # Using --workers=1 because Cloud Run handles concurrency with multiple container instances
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000", "--workers", "1"]
+CMD sh -c "uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000} --workers 1"

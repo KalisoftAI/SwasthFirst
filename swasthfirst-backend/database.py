@@ -14,16 +14,33 @@ from dotenv import load_dotenv
 # Load environment variables
 load_dotenv()
 
-# Database URL from environment (convert postgresql:// to postgresql+asyncpg://)
+# Database URL from environment
 DATABASE_URL = os.getenv("DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/swasthfirst")
 
-# Convert sync URL to async URL for asyncpg
-if DATABASE_URL.startswith("postgresql://"):
-    ASYNC_DATABASE_URL = DATABASE_URL.replace("postgresql://", "postgresql+asyncpg://", 1)
-else:
-    ASYNC_DATABASE_URL = DATABASE_URL
+# Parse and clean the database URL
+def get_clean_database_url():
+    """
+    Parse database URL and remove channel_binding parameter.
+    Keep sslmode=require for Neon, but remove channel_binding which asyncpg doesn't support.
+    """
+    url = DATABASE_URL
+    
+    # Convert postgresql:// to postgresql+asyncpg://
+    if url.startswith("postgresql://"):
+        url = url.replace("postgresql://", "postgresql+asyncpg://", 1)
+    
+    # Remove ONLY channel_binding parameter, keep sslmode
+    # Neon URLs have ?sslmode=require&channel_binding=require
+    # Keep sslmode, remove channel_binding
+    url = url.replace("&channel_binding=require", "")
+    url = url.replace("?channel_binding=require&", "?")
+    url = url.replace("?channel_binding=require", "")
+    
+    return url
 
-# Create async engine
+ASYNC_DATABASE_URL = get_clean_database_url()
+
+# Create async engine with SSL support for Neon
 engine = create_async_engine(
     ASYNC_DATABASE_URL,
     echo=os.getenv("ENV") == "development",  # Log SQL queries in development
