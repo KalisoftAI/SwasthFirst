@@ -17,7 +17,7 @@ import os
 from dotenv import load_dotenv
 
 # Load environment first
-load_dotenv()
+load_dotenv(dotenv_path='.env.production')
 
 from database import engine, Base, AsyncSessionLocal, drop_all_tables
 from models import MenuItem, Admin, Customer, AdminRole
@@ -64,6 +64,10 @@ SAMPLE_CUSTOMERS = [
     {"name": "Protika", "phone": "7798933354", "health_goal": "Health"},
     {"name": "Satish", "phone": "9096029994", "health_goal": "Energy"},
     {"name": "Pooja Agrawal", "phone": "9356541963", "health_goal": "Weight Loss"},
+    {"name": "Kishori Patil", "phone": "9130399485", "health_goal": "Weight Loss"},
+    {"name": "Mayur Sonar", "phone": "9175120610", "health_goal": "Weight Loss"},
+    {"name": "Prachee Deshpande", "phone": "8425848529", "health_goal": "Weight Loss"},
+    {"name": "Shruti Gandhi", "phone": "9510590135", "health_goal": "Weight Loss"},
 ]
 
 
