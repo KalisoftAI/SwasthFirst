@@ -15,6 +15,11 @@ RUN npm install
 # Copy the rest of the application source code
 COPY . .
 
+# Set the API URL from a build argument. This allows you to pass
+# the backend URL during the `docker build` command.
+ARG REACT_APP_API_URL
+ENV REACT_APP_API_URL=$REACT_APP_API_URL
+
 # Build the application for production
 RUN npm run build
 

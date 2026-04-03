@@ -20,7 +20,8 @@ from dotenv import load_dotenv
 load_dotenv()
 
 from database import engine, Base, AsyncSessionLocal, drop_all_tables
-from models import MenuItem, Admin, Customer, AdminRole, select
+from models import MenuItem, Admin, Customer, AdminRole
+from sqlalchemy import select
 from auth import hash_password
 
 # Menu data to seed
@@ -117,7 +118,8 @@ async def seed_database():
             
             # Create superadmin
             print("👑 Creating superadmin account...")
-            superadmin = await session.get(Admin, "swasthAdmin")
+            result = await session.execute(select(Admin).where(Admin.username == "swasthAdmin"))
+            superadmin = result.scalar_one_or_none()
             if not superadmin:
                 admin = Admin(
                     username="swasthAdmin",

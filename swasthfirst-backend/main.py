@@ -17,7 +17,7 @@ Version: 1.0.0
 
 import os
 from contextlib import asynccontextmanager
-from datetime import datetime
+from datetime import datetime, timezone
 from fastapi import FastAPI, Request, status
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
@@ -33,6 +33,7 @@ from seed_data import seed_database
 
 # Load environment variables
 load_dotenv()
+ADMIN_SECRET = os.getenv("ADMIN_SECRET")
 
 # Environment configuration
 ENV = os.getenv("ENV", "development")
@@ -233,7 +234,7 @@ async def root():
     return {
         "message": "Welcome to SwasthFirst API",
         "version": "1.0.0",
-        "docs": "/docs",
+        "documentation": "/docs",
         "health": "/health",
         "timestamp": datetime.utcnow().isoformat()
     }
@@ -255,7 +256,7 @@ async def health_check():
     """
     return HealthResponse(
         status="ok",
-        timestamp=datetime.utcnow(),
+        timestamp=datetime.now(timezone.utc),
         version="1.0.0"
     )
 
@@ -266,7 +267,7 @@ async def health_check():
     description="Create database tables and seed initial data",
     tags=["Root"]
 )
-async def initialize_database():
+async def initialize_database(secret: str | None = None):
     """
     Initialize database tables and seed with data.
     
@@ -282,6 +283,13 @@ async def initialize_database():
         Success message with data summary
     """
     try:
+        if ENV == "production":
+            if not ADMIN_SECRET or secret != ADMIN_SECRET:
+                return JSONResponse(
+                    status_code=status.HTTP_403_FORBIDDEN,
+                    content={"status": "error", "message": "Not authorized"}
+                )
+
         print("🌱 Starting database initialization...")
         
         # Initialize database tables
@@ -302,7 +310,7 @@ async def initialize_database():
                     "password": "Admin@1234 (CHANGE THIS IN PRODUCTION)"
                 }
             },
-            "timestamp": datetime.utcnow().isoformat(),
+            "timestamp": datetime.now(timezone.utc).isoformat(),
             "next_steps": [
                 "Test login with superadmin credentials",
                 "Verify menu items are available at /api/v1/menu",
@@ -337,10 +345,14 @@ if __name__ == "__main__":
     ╚═══════════════════════════════════════════════════════════╝
     """)
     
+    # Get port from environment variable, default to 8000 for local dev.
+    # This is crucial for platforms like Cloud Run that set the PORT dynamically.
+    port = int(os.getenv("PORT", 8000))
+
     uvicorn.run(
         "main:app",
         host="0.0.0.0",
-        port=8000,
+        port=port,
         reload=ENV == "development",
         log_level="info"
     )

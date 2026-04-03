@@ -132,9 +132,9 @@ print_status "GCP project set to: ${PROJECT_ID}"
 
 # Step 3 & 4: Build and Push Docker image using Cloud Build
 print_info "Step 3-4/5: Building and Pushing image via Cloud Build (2-3 minutes)..."
-print_info "Image: ${IMAGE_NAME}"
-
-gcloud builds submit --tag ${IMAGE_NAME}:latest . || {
+print_info "Image: ${IMAGE_NAMgcloud builds submit . \
+    --config=cloudbuild.yaml \
+    --substitutions=_SERVICE_NAME=${SERVICE_NAME},_REACT_APP_API_URL="${BACKEND_URL}/api/v1" || {
     print_error "Cloud Build failed"
     exit 1
 }
@@ -153,8 +153,7 @@ gcloud run deploy ${SERVICE_NAME} \
     --timeout ${TIMEOUT} \
     --port ${CONTAINER_PORT} \
     --allow-unauthenticated \
-    --set-env-vars="REACT_APP_API_URL=${BACKEND_URL}/api/v1" || {
-    print_error "Cloud Run deployment failed"
+    || {
     exit 1
 }
 

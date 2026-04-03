@@ -1,12 +1,28 @@
-fastapi>=0.111.0
-uvicorn[standard]>=0.29.0
-sqlalchemy>=2.0.0
-psycopg2-binary>=2.9.0
-asyncpg>=0.29.0
-alembic>=1.13.0
-passlib[bcrypt]>=1.7.4
-python-jose[cryptography]>=3.3.0
-pydantic[email]>=2.0.0
-pydantic-settings>=2.0.0
-python-multipart>=0.0.9
-python-dotenv>=1.0.0
+# FastAPI and Server
+fastapi==0.110.0
+uvicorn[standard]==0.27.1
+
+# Database (SQLAlchemy with asyncpg for PostgreSQL)
+# Using SQLAlchemy 2.0+ for first-class async support which correctly handles
+# connection parameters like 'sslmode' for the asyncpg driver.
+SQLAlchemy==2.0.28
+asyncpg==0.29.0
+
+# Required by SQLAlchemy for async operations
+greenlet==3.0.3
+
+# psycopg2 is often used by migration tools like Alembic for synchronous operations
+psycopg2-binary==2.9.9
+
+# Migrations
+alembic==1.13.1
+
+# Environment variables
+python-dotenv==1.0.1
+
+# Authentication (JWT and password hashing)
+python-jose[cryptography]==3.3.0
+passlib[bcrypt]==1.7.4
+
+# Pin bcrypt to a version compatible with passlib 1.7.4 to avoid the __about__ AttributeError
+bcrypt==4.0.1
