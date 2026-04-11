@@ -1,0 +1,34 @@
+{
+  "name": "swasth-order-agent-backend",
+  "version": "1.0.0",
+  "description": "WhatsApp Order Agent Backend using Baileys",
+  "main": "server.js",
+  "scripts": {
+    "dev": "nodemon server.js",
+    "start": "node server.js"
+  },
+  "keywords": [
+    "whatsapp",
+    "baileys",
+    "order",
+    "agent"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@whiskeysockets/baileys": "^6.6.0",
+    "body-parser": "^1.20.2",
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.3",
+    "express": "^4.18.2",
+    "fast-csv": "^4.3.6",
+    "node-cron": "^3.0.2",
+    "pg": "^8.10.0",
+    "pino": "^8.14.1",
+    "qrcode": "^1.5.3",
+    "socket.io": "^4.5.4"
+  },
+  "devDependencies": {
+    "nodemon": "^2.0.20"
+  }
+}
