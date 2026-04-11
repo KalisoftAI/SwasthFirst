@@ -1,0 +1,17 @@
+node_modules
+npm-debug.log
+.git
+.gitignore
+.vscode
+.env
+.DS_Store
+backend/auth/
+backend/node_modules/
+frontend/node_modules/
+frontend/build/
+.next
+dist
+build
+*.log
+.env.local
+.env.*.local
