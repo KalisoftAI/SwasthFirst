@@ -123,7 +123,7 @@ Name: Ananya Joshi | Phone: 9988776655
 ### Admin
 ```
 Username: swasthAdmin
-Password: Admin@1234
+Password: password
 ```
 
 ## 📚 Documentation
